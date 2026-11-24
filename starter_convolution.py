@@ -63,19 +63,27 @@ def convolve_sequential(img: np.ndarray, kernel: np.ndarray) -> np.ndarray:
 def make_row_chunks(
     num_workers: int, start_row: int = 2, end_row: int | None = None
 ) -> list[tuple[int, int]]:
-    """Split row range [start_row, end_row) into `num_workers` disjoint slices.
-
-    For 5x5 convolution on an image of height H, call with:
-        make_row_chunks(num_workers, start_row=2, end_row=H - 2)
-    For full-image operations (such as the Optional Bonus histogram), call with:
-        make_row_chunks(num_workers, start_row=0, end_row=H)
-
-    Note: The final chunk must absorb any remainder rows if not evenly divisible.
-    """
+    """Divide rows between workers, with leftover rows in the last chunk."""
     if end_row is None:
         raise ValueError("Please pass end_row explicitly.")
-    # TODO (Milestone 1): Replace this placeholder with your chunking logic
-    raise NotImplementedError("Implement make_row_chunks")
+    if num_workers < 1:
+        raise ValueError("num_workers must be at least 1.")
+    if end_row < start_row:
+        raise ValueError("end_row must be at least start_row.")
+
+    rows_per_worker = (end_row - start_row) // num_workers
+    chunks = []
+
+    for worker in range(num_workers):
+        first_row = start_row + worker * rows_per_worker
+        last_row = first_row + rows_per_worker
+
+        if worker == num_workers - 1:
+            last_row = end_row
+
+        chunks.append((first_row, last_row))
+
+    return chunks
 
 
 def convolve_row_range(
